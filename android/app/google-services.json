@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1072359086409",
+    "project_id": "medbooker-4b72f",
+    "storage_bucket": "medbooker-4b72f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1072359086409:android:3dbb3c48a180efe497a298",
+        "android_client_info": {
+          "package_name": "com.example.medbooker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClF1Pr1Tk0JH8Ba6r2H3-KHrN6PJAhtyQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
