@@ -1,5 +1,10 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:medbooker/enums/user-roles.dart';
 
 final FirebaseAuth _firebase = FirebaseAuth.instance;
 
@@ -17,10 +22,55 @@ class _AuthPageState extends State<AuthPage> {
   var _enteredConfirmedPassword = '';
   var _enteredUsername = '';
   var _enteredFullName = '';
+  UserRole _chosenRole = UserRole.member;
+  bool role = false;
+  File? _selectedImage;
   bool _isLogin = true;
 
-  submit() {
+  submit() async {
+    final isValid = _formKey.currentState!.validate();
+    if (!isValid) return;
+    if (isValid) _formKey.currentState?.save();
     print("current form: ${_isLogin ? "login" : "register"}");
+    await Future.delayed(const Duration(seconds: 2));
+    try {
+      if (_isLogin) {
+        UserCredential userCredential =
+            await _firebase.signInWithEmailAndPassword(
+          email: _enteredEmail,
+          password: _enteredPassword,
+        );
+      } else {
+        UserCredential userCredential =
+            await _firebase.createUserWithEmailAndPassword(
+          email: _enteredEmail,
+          password: _enteredPassword,
+        );
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child("user_images")
+            .child("${userCredential.user?.uid}.jpg");
+        await storageRef.putFile(_selectedImage!);
+        final _imageUrl = await storageRef.getDownloadURL();
+        await FirebaseFirestore.instance
+            .collection("users")
+            .doc(userCredential.user!.uid)
+            .set({
+          "fullName": _enteredEmail,
+          "username": _enteredUsername,
+          "email": _enteredEmail,
+          "photoUrl": _imageUrl,
+          "creation_time": DateTime.now(),
+          "role": getRole(_chosenRole),
+          'entityNo': _chosenRole == UserRole.member ? 1000000001 : 1100000111,
+        });
+      }
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message.toString())),
+      );
+    }
   }
 
   @override
@@ -209,6 +259,26 @@ class _AuthPageState extends State<AuthPage> {
                                 onSaved: (newValue) {
                                   _enteredConfirmedPassword = newValue!;
                                 },
+                              ),
+                            if (!_isLogin)
+                              Row(
+                                children: [
+                                  const Text("Member"),
+                                  Switch(
+                                    value: role,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        role = value;
+                                        if (role == false) {
+                                          _chosenRole = UserRole.member;
+                                        } else {
+                                          _chosenRole = UserRole.practitioner;
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const Text("Practitioner"),
+                                ],
                               ),
                             const SizedBox(
                               height: 20,
