@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:medbooker/Presentation/widgets/user_image_picker.dart';
 import 'package:medbooker/enums/user-roles.dart';
 
 final FirebaseAuth _firebase = FirebaseAuth.instance;
@@ -31,7 +32,9 @@ class _AuthPageState extends State<AuthPage> {
     final isValid = _formKey.currentState!.validate();
     if (!isValid) return;
     if (isValid) _formKey.currentState?.save();
+
     print("current form: ${_isLogin ? "login" : "register"}");
+
     await Future.delayed(const Duration(seconds: 2));
     try {
       if (_isLogin) {
@@ -56,7 +59,7 @@ class _AuthPageState extends State<AuthPage> {
             .collection("users")
             .doc(userCredential.user!.uid)
             .set({
-          "fullName": _enteredEmail,
+          "fullName": _enteredFullName,
           "username": _enteredUsername,
           "email": _enteredEmail,
           "photoUrl": _imageUrl,
@@ -280,6 +283,12 @@ class _AuthPageState extends State<AuthPage> {
                                   const Text("Practitioner"),
                                 ],
                               ),
+                            if (!_isLogin)
+                              UserImagePicker(
+                                onPickedImage: (pickedImage) {
+                                  _selectedImage = pickedImage;
+                                },
+                              ),
                             const SizedBox(
                               height: 20,
                             ),
@@ -300,9 +309,7 @@ class _AuthPageState extends State<AuthPage> {
                                   width: 20,
                                 ),
                                 ElevatedButton(
-                                  onPressed: () {
-                                    submit();
-                                  },
+                                  onPressed: submit,
                                   style: ButtonStyle(
                                       elevation: MaterialStateProperty.all(0)),
                                   child: _isLogin
